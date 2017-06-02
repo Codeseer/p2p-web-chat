@@ -1,0 +1,63 @@
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/0.3.14/peer.js"></script>
+
+  </head>
+  <body>
+    <form id="call-form">
+      <input type="text" id="their-peer-id">
+      <input type="submit" value="Call">
+    </form>
+    <h1 id="my-peer-id"></h2>
+    <video id="their-video"></video>
+    <video id="my-video"></video>
+    <script>
+    document.addEventListener("DOMContentLoaded", function(event) {
+      const peerId = Math.round(Math.random() * 10000);
+      document.getElementById('my-peer-id').innerHTML = peerId;
+      const apiKey = 'owrriufjolayvi';
+      const peer = new Peer(peerId, {key: apiKey});
+      const theirVideo = document.getElementById('their-video');
+      const myVideo = document.getElementById('my-video');
+      navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+      peer.on('call', function(call) {
+        navigator.getUserMedia({video: true, audio: true}, function(stream) {
+          myVideo.srcObject = stream;
+          myVideo.onloadedmetadata = function(e) {
+            myVideo.play();
+          };
+          call.answer(stream); // Answer the call with an A/V stream.
+          call.on('stream', function(remoteStream) {
+            theirVideo.srcObject = remoteStream;
+            theirVideo.onloadedmetadata = function(e) {
+              theirVideo.play();
+            };
+          });
+        }, function(err) {
+          console.log('Failed to get local stream' ,err);
+        });
+      });
+      const callPeer = function(evt) {
+        evt.preventDefault();
+        navigator.getUserMedia({video: true, audio: true}, function(stream) {
+          var call = peer.call(document.getElementById('their-peer-id').value, stream);
+          myVideo.srcObject = stream;
+          myVideo.onloadedmetadata = function(e) {
+            myVideo.play();
+          };
+          call.on('stream', function(remoteStream) {
+            theirVideo.srcObject = remoteStream;
+            theirVideo.onloadedmetadata = function(e) {
+              theirVideo.play();
+            };
+          });
+        }, function(err) {
+          console.log('Failed to get local stream' ,err);
+        });
+        return false;
+      }
+      document.getElementById('call-form').onsubmit = callPeer;
+    });
+    </script>
+  </body>
+</html>
